@@ -49,3 +49,5 @@ IE00B3VTMJ91.png
 US0378331005.png
 US88160R1014.png
 ```
+
+Trades for which no information can be retrieved are automatically skipped.
