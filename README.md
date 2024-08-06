@@ -29,3 +29,22 @@ In the ```out/csv``` directory you will find, for each trade, a CSV file with al
 In the ```out/img``` directory you will find, for each trade, the relative chart, plus a comparison chart for all the trades together, like in the following image.
 
 <a href="https://ibb.co/kH36kN7"><img src="https://i.ibb.co/7YgN8sf/ALL.png" alt="TradesPlotter" border="0" /></a>
+
+As you can see, the example subdirectories contain the following files:
+
+```
+$ ls -1 out/*
+
+out/csv:
+IE00B0M62Q58.csv
+IE00B3VTMJ91.csv
+US0378331005.csv
+US88160R1014.csv
+
+out/img:
+ALL.png
+IE00B0M62Q58.png
+IE00B3VTMJ91.png
+US0378331005.png
+US88160R1014.png
+```
