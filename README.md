@@ -8,6 +8,7 @@ usage: python tradesplotter.py <input_csv> <output_dir>
 ```
 
 **Example:**
+
 First of all, prepare a CSV file (trades_example.csv) with the ISIN codes of all your trades, plus their names, like in this example:
 
 ```
@@ -21,7 +22,7 @@ IE00B3VTMJ91,iShares Euro Government Bond 1-3yr UCITS ETF (Acc)
 Then run the script like this:
 
 ```
-usage: python tradesplotter.py trades_example.csv out
+$ ./tradesplotter.py trades_example.csv out
 ```
 
 In the ```out/csv``` directory you will find, for each trade, a CSV file with all its closing prices of his entire lifespan to date.

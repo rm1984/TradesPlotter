@@ -1,0 +1,4 @@
+matplotlib==3.6.3
+pandas==2.1.4+dfsg
+termcolor==2.4.0
+yfinance==0.2.37
