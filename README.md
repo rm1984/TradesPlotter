@@ -26,6 +26,7 @@ $ ./tradesplotter.py trades_example.csv out
 ```
 
 In the ```out/csv``` directory you will find, for each trade, a CSV file with all its closing prices of his entire lifespan to date.
+
 In the ```out/img``` directory you will find, for each trade, the relative chart, plus a comparison chart for all the trades together, like in the following image.
 
 <a href="https://ibb.co/kH36kN7"><img src="https://i.ibb.co/7YgN8sf/ALL.png" alt="TradesPlotter" border="0" /></a>
