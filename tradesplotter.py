@@ -15,8 +15,8 @@ import argparse
 import locale
 import os
 import random
-import stdnum
 import sys
+import stdnum
 import matplotlib.pyplot as plt
 import pandas as pd
 import stdnum.isin
@@ -40,6 +40,44 @@ def print_error(message):
 def print_debug(message):
     if DEBUG:
         print(colored("[DEBUG]", "yellow") + " " + message)
+
+
+def check_file(file):
+    if os.path.exists(file) and os.access(file, os.R_OK):
+        print_debug('File "{}" exists and is readable.'.format(file))
+    else:
+        print_error('File "{}" does not exist or is not readable.'.format(file))
+        sys.exit(1)
+
+
+def check_and_create_directory(directory):
+    if os.path.exists(directory) and os.access(directory, os.W_OK):
+        print_debug('Directory "{}" exists and is writable.'.format(directory))
+    else:
+        print_debug('Directory "{} does not exist.'.format(directory))
+
+        try:
+            os.makedirs(directory, exist_ok=True)
+            print_debug('Directory "{}" has been created.'.format(directory))
+        except OSError as e:
+            print_error('Error creating "{}" directory ({}).'.format(directory, e))
+            sys.exit(1)
+
+
+def isin_to_color(isin):
+    base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    base36_map = {char: i for i, char in enumerate(base36)}
+    num_value = 0
+
+    for char in isin:
+        num_value = num_value * 36 + base36_map[char]
+
+    r = (num_value >> 16) & 0xFF
+    g = (num_value >> 8) & 0xFF
+    b = num_value & 0xFF
+    color = f"#{r:02X}{g:02X}{b:02X}"
+
+    return color
 
 
 def plot(isin, title, csv_output_dir, img_output_dir):
@@ -75,7 +113,7 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
         plt.figure(figsize=(1920 / DPI, 1080 / DPI), dpi=DPI)
 
         for df in dfs:
-            random_color = (random.random(), random.random(), random.random())
+            random_color = isin_to_color(isin_list[cnt])
             plt.plot(
                 df["Date"],
                 df["Close"],
@@ -99,29 +137,7 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
 
         print_debug('Comparison image saved to "{}" file'.format(img_output_file))
     except Exception as e:  # TODO: too general exception
-        print_error("Can not save comparison image file ({}).".format(isin, e))
-
-
-def check_file(file):
-    if os.path.exists(file) and os.access(file, os.R_OK):
-        print_debug('File "{}" exists and is readable.'.format(file))
-    else:
-        print_error('File "{}" does not exist or is not readable.'.format(file))
-        sys.exit(1)
-
-
-def check_and_create_directory(directory):
-    if os.path.exists(directory) and os.access(directory, os.W_OK):
-        print_debug('Directory "{}" exists and is writable.'.format(directory))
-    else:
-        print_debug('Directory "{} does not exist.'.format(directory))
-
-        try:
-            os.makedirs(directory, exist_ok=True)
-            print_debug('Directory "{}" has been created.'.format(directory))
-        except OSError as e:
-            print_error('Error creating "{}" directory ({}).'.format(directory, e))
-            sys.exit(1)
+        print_error("Can not save comparison image file ({}).".format(e))
 
 
 def main():
