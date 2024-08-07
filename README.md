@@ -4,7 +4,7 @@
 
 **Usage:**
 ```
-usage: python tradesplotter.py <input_csv> <output_dir>
+usage: python tradesplotter.py [-h] -i INPUT_FILE -o OUTPUT_DIR
 ```
 
 **Example:**
@@ -22,7 +22,7 @@ IE00B3VTMJ91,iShares Euro Government Bond 1-3yr UCITS ETF (Acc)
 Then run the script like this:
 
 ```
-$ ./tradesplotter.py trades_example.csv out
+$ ./tradesplotter.py -i trades_example.csv -o out
 ```
 
 In the ```out/csv``` directory you will find, for each trade, a CSV file with all its closing prices of his entire lifespan to date.
