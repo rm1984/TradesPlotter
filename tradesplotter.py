@@ -2,21 +2,21 @@
 # -*- coding: utf-8 -*-
 
 #
-# YFPlotter.py
-# ------------
-# A simple Python script that ...
+# TradesPlotter.py
+# ----------------
+# A simple Python script that, by using the great Yahoo Finance APIs, downloads
+# the data for a list of trades of your choice and draws the respective charts,
+# plus a comparison chart for all the trades together.
 #
 # Coded by: Riccardo Mollo (riccardomollo84@gmail.com)
 #
 
-# https://medium.com/@kasperjuunge/yfinance-10-ways-to-get-stock-data-with-python-6677f49e8282
-
-import contextlib
+import argparse
 import csv
 import locale
 import os
 import sys
-import random as random
+import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import yfinance as yf
@@ -24,7 +24,7 @@ from termcolor import colored
 
 DEBUG = True
 CACHE = ".cache"  # custom cache location for YFinance data
-DPI = 96
+DPI = 96  # DPI resolution of your monitor
 
 yf.set_tz_cache_location(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + CACHE
@@ -71,8 +71,7 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
             csv_input_file = csv_output_dir + os.path.sep + isin + ".csv"
             dfs.append(pd.read_csv(csv_input_file, parse_dates=["Date"]))
 
-        #plt.figure(figsize=(10, 5))
-        plt.figure(figsize=(1920/DPI, 1080/DPI), dpi=300)
+        plt.figure(figsize=(1920 / DPI, 1080 / DPI), dpi=DPI)
 
         for df in dfs:
             random_color = (random.random(), random.random(), random.random())
@@ -103,6 +102,14 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
         print_error("Can not save comparison image file ({}).".format(isin, e))
 
 
+def check_file(file):
+    if os.path.exists(file) and os.access(file, os.R_OK):
+        print_debug('File "{}" exists and is readable.'.format(file))
+    else:
+        print_error('File "{}" does not exist or is not readable.'.format(file))
+        sys.exit(1)
+
+
 def check_and_create_directory(directory):
     if os.path.exists(directory) and os.access(directory, os.W_OK):
         print_debug('Directory "{}" exists and is writable.'.format(directory))
@@ -118,41 +125,39 @@ def check_and_create_directory(directory):
 
 
 def main():
-    if len(sys.argv) != 3:
-        script_name = os.path.basename(__file__)
-        print_error(f"Usage: python {script_name} <input_csv> <output_dir>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input-file", help="Input CSV file", required=True)
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        help="Output directory for saving CSV files and images",
+        required=True,
+    )
+    args = parser.parse_args()
 
-    csv_input_file = sys.argv[1]
-    output_dir = sys.argv[2]
+    csv_input_file = args.input_file
+    output_dir = args.output_dir
     csv_output_dir = output_dir + os.path.sep + "csv"
     img_output_dir = output_dir + os.path.sep + "img"
 
-    if os.path.exists(csv_input_file) and os.access(csv_input_file, os.R_OK):
-        print_debug('File "{}" exists and is readable.'.format(csv_input_file))
-    else:
-        print_error(
-            'File "{}" does not exist or is not readable.'.format(csv_input_file)
-        )
-        sys.exit(1)
-
+    check_file(csv_input_file)
     check_and_create_directory(output_dir)
     check_and_create_directory(csv_output_dir)
     check_and_create_directory(img_output_dir)
 
     with open(csv_input_file, mode="r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
-
         isin_list = []
+        cnt = 0
 
         for row in reader:
             isin = row[0]
             title = row[1]
+            cnt += 1
 
             print_debug("Getting data for {} ({})...".format(isin, title))
 
             try:
-                # with open(os.devnull, "w", encoding=locale.getpreferredencoding()) as fnull, contextlib.redirect_stdout(fnull), contextlib.redirect_stderr(fnull):
                 with open(os.devnull, "w", encoding=locale.getpreferredencoding()):
                     data = yf.download(isin, period="max")
 
@@ -172,11 +177,12 @@ def main():
                         isin_list.append(isin)
             except Exception as e:  # TODO: too general exception
                 print_error(
-                    "Can not get data or safe CSV file for {} ({}).".format(isin, e)
+                    "Can not get data or save CSV file for {} ({}).".format(isin, e)
                 )
 
         plot_all(isin_list, csv_output_dir, img_output_dir)
 
+    print_debug("Fetched data for {} out of {} trades.".format(len(isin_list), cnt))
     print()
     sys.exit(0)
 
