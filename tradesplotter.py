@@ -12,19 +12,21 @@
 #
 
 import argparse
-import csv
 import locale
 import os
-import sys
 import random
+import stdnum
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
+import stdnum.isin
 import yfinance as yf
 from termcolor import colored
 
 DEBUG = True
 CACHE = ".cache"  # custom cache location for YFinance data
 DPI = 96  # DPI resolution of your monitor
+IMG_FORMAT = "png"  # output format for chart images
 
 yf.set_tz_cache_location(
     os.path.dirname(os.path.abspath(__file__)) + os.path.sep + CACHE
@@ -43,8 +45,7 @@ def print_debug(message):
 def plot(isin, title, csv_output_dir, img_output_dir):
     try:
         csv_input_file = csv_output_dir + os.path.sep + isin + ".csv"
-        img_format = "png"
-        img_output_file = img_output_dir + os.path.sep + isin + "." + img_format
+        img_output_file = img_output_dir + os.path.sep + isin + "." + IMG_FORMAT
         df = pd.read_csv(csv_input_file, parse_dates=["Date"])
 
         plt.figure(figsize=(10, 5))
@@ -55,7 +56,7 @@ def plot(isin, title, csv_output_dir, img_output_dir):
         plt.suptitle("Close Price Over Time (Max)")
         plt.grid(True)
         plt.xticks(rotation=45)
-        plt.savefig(img_output_file, format=img_format, dpi=300)
+        plt.savefig(img_output_file, format=IMG_FORMAT, dpi=300)
 
         print_debug('Image for {} saved to "{}" file'.format(isin, img_output_file))
     except Exception as e:  # TODO: too general exception
@@ -92,10 +93,9 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
         plt.xticks(rotation=45)
         plt.legend()
 
-        img_format = "png"
-        img_output_file = img_output_dir + os.path.sep + "ALL." + img_format
+        img_output_file = img_output_dir + os.path.sep + "ALL." + IMG_FORMAT
 
-        plt.savefig(img_output_file, format=img_format, dpi=300)
+        plt.savefig(img_output_file, format=IMG_FORMAT, dpi=DPI)
 
         print_debug('Comparison image saved to "{}" file'.format(img_output_file))
     except Exception as e:  # TODO: too general exception
@@ -126,7 +126,9 @@ def check_and_create_directory(directory):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-file", help="Input CSV file", required=True)
+    parser.add_argument(
+        "-i", "--input-file", help="Input file with a list of ISIN codes", required=True
+    )
     parser.add_argument(
         "-o",
         "--output-dir",
@@ -135,30 +137,33 @@ def main():
     )
     args = parser.parse_args()
 
-    csv_input_file = args.input_file
+    input_file = args.input_file
     output_dir = args.output_dir
     csv_output_dir = output_dir + os.path.sep + "csv"
     img_output_dir = output_dir + os.path.sep + "img"
 
-    check_file(csv_input_file)
+    check_file(input_file)
     check_and_create_directory(output_dir)
     check_and_create_directory(csv_output_dir)
     check_and_create_directory(img_output_dir)
 
-    with open(csv_input_file, mode="r", newline="", encoding="utf-8") as file:
-        reader = csv.reader(file)
+    with open(input_file, mode="r", encoding=locale.getpreferredencoding()) as file:
+        lines = file.readlines()
         isin_list = []
         cnt = 0
 
-        for row in reader:
-            isin = row[0]
-            title = row[1]
+        for line in lines:
             cnt += 1
+            isin = line.strip()
 
-            print_debug("Getting data for {} ({})...".format(isin, title))
-
-            try:
-                with open(os.devnull, "w", encoding=locale.getpreferredencoding()):
+            if not stdnum.isin.is_valid(isin):
+                print_error("ISIN code {} is not valid.".format(isin))
+            else:
+                try:
+                    info = yf.Ticker(isin)
+                    title = info.info["longName"]
+                    # symbol = info.info['symbol']  # TODO: also use symbols in the comparison image
+                    print_debug("Getting data for {} ({})...".format(isin, title))
                     data = yf.download(isin, period="max")
 
                     if len(data) == 0:
@@ -175,10 +180,10 @@ def main():
 
                         plot(isin, title, csv_output_dir, img_output_dir)
                         isin_list.append(isin)
-            except Exception as e:  # TODO: too general exception
-                print_error(
-                    "Can not get data or save CSV file for {} ({}).".format(isin, e)
-                )
+                except Exception as e:  # TODO: too general exception
+                    print_error(
+                        "Can not get data or save CSV file for {} ({}).".format(isin, e)
+                    )
 
         plot_all(isin_list, csv_output_dir, img_output_dir)
 

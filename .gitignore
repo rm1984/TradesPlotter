@@ -164,4 +164,4 @@ cython_debug/
 # custom
 .cache/
 out/
-trades.csv
+trades.txt
