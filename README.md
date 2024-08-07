@@ -9,11 +9,12 @@ usage: python tradesplotter.py [-h] -i INPUT_FILE -o OUTPUT_DIR
 
 **Example:**
 
-First of all, prepare a text file (trades_example.txt) with a list of the ISIN codes of all your trades, like in this example:
+First of all, prepare a text file (for example, ```trades_example.txt```) with a list of the ISIN codes of all your trades, like in this example:
 
 ```
 US0378331005
 US88160R1014
+IA00B1M62Q52
 IE00B0M62Q58
 JE00B1VS3770
 IE00B3VTMJ91
