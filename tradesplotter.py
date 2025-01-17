@@ -80,6 +80,74 @@ def isin_to_color(isin):
     return color
 
 
+def norm_minmax(isin_list, csv_output_dir):
+    cnt = 0
+    dfs = []
+    norm_dfs = []
+
+    for isin in isin_list:
+        csv_input_file = csv_output_dir + os.path.sep + isin + ".csv"
+        dfs.append(pd.read_csv(csv_input_file, parse_dates=["Date"]))
+
+    combined_df = pd.concat(dfs, ignore_index=True)
+
+    min_values = combined_df.min()
+    max_values = combined_df.max()
+
+    def min_max_normalize(df):
+        return (df - min_values) / (max_values - min_values)
+
+    plt.figure(figsize=(1920 / DPI, 1080 / DPI), dpi=DPI)
+
+    for df in dfs:
+        norm_dfs.append(min_max_normalize(df))
+        norm_dfs[cnt].to_csv("/tmp/idx/" + str(cnt) + ".csv", index=False)
+        plt.plot(norm_dfs[cnt]["Date"], norm_dfs[cnt]["Close"], label=str(cnt))
+        cnt += 1
+
+    plt.xlabel("Date")
+    plt.ylabel("Normalized Close")
+    plt.title("Normalized Close Prices")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
+def norm_zscore(isin_list, csv_output_dir):
+    cnt = 0
+    dfs = []
+    norm_dfs = []
+
+    for isin in isin_list:
+        csv_input_file = csv_output_dir + os.path.sep + isin + ".csv"
+        dfs.append(pd.read_csv(csv_input_file, parse_dates=["Date"]))
+
+    combined_df = pd.concat(dfs, ignore_index=True)
+
+    mean_values = combined_df.mean()
+    std_values = combined_df.std()
+
+    def z_score_standardize(df):
+        return (df - mean_values) / std_values
+
+    plt.figure(figsize=(1920 / DPI, 1080 / DPI), dpi=DPI)
+
+    for df in dfs:
+        norm_dfs.append(z_score_standardize(df))
+        norm_dfs[cnt].to_csv("/tmp/idx/" + str(cnt) + "_z.csv", index=False)
+        plt.plot(norm_dfs[cnt]["Date"], norm_dfs[cnt]["Close"], label=str(cnt))
+        cnt += 1
+
+    plt.xlabel("Date")
+    plt.ylabel("Normalized Close")
+    plt.title("Normalized Close Prices")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
 def plot(isin, title, csv_output_dir, img_output_dir):
     try:
         csv_input_file = csv_output_dir + os.path.sep + isin + ".csv"
@@ -138,6 +206,14 @@ def plot_all(isin_list, csv_output_dir, img_output_dir):
         print_debug('Comparison image saved to "{}" file'.format(img_output_file))
     except Exception as e:  # TODO: too general exception
         print_error("Can not save comparison image file ({}).".format(e))
+
+
+def main2():
+    #isin_list = ["IE00B0M62Q58", "IE00B3VTMJ91", "US0378331005", "US88160R1014"]
+    isin_list = ['IE00B0M62X26' ,'IE00B14X4Q57' ,'IE00B3DKXQ41' ,'IE00B3F81R35' ,'IE00B3VTMJ91' ,'IE00B4L5Y983' ,'IE00B53SZB19' ,'IE00B5BMR087' ,'IE00B9CQXS71' ,'IE00BDFL4P12' ,'IE00BF4G7076' ,'IE00BM67HN09' ,'IE00BM67HQ30' ,'IE00BYZK4669' ,'IE00BZCQB185' ,'IT0005285157' ,'IT0005423246' ,'LU0140636928' ,'LU0497415702' ,'LU0908500753' ,'LU1681041114' ,'LU1781541252' ,'LU2009201638' ,'LU2215044020']
+    csv_output_dir = "out/csv"
+    norm_minmax(isin_list, csv_output_dir)
+    norm_zscore(isin_list, csv_output_dir)
 
 
 def main():
